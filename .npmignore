@@ -1,0 +1,11 @@
+# Don't publish generated BMAD files — users run npm run setup to get them
+.claude/skills/
+_bmad/
+_bmad-output/
+docs/
+
+# Dev/test files
+.env
+.DS_Store
+
+# Keep: assets/ (donate image for README)

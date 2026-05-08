@@ -1,0 +1,49 @@
+{
+  "name": "istd-bmad",
+  "version": "1.0.0",
+  "description": "BMAD-METHOD MCP server for local network — project-aware AI development skills with web dashboard",
+  "type": "module",
+  "main": "server.js",
+  "bin": {
+    "istd-bmad": "bin/cli.js"
+  },
+  "scripts": {
+    "setup": "node setup.js",
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "files": [
+    "bin/",
+    "server.js",
+    "setup.js",
+    "public/",
+    "assets/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "bmad",
+    "bmad-method",
+    "mcp",
+    "mcp-server",
+    "claude-code",
+    "ai-development",
+    "ai-agile",
+    "istd"
+  ],
+  "author": "Theerasak Duangkaew",
+  "license": "MIT",
+  "homepage": "https://github.com/iAmStarter/istd-bmad#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iAmStarter/istd-bmad.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "execa": "^9.5.1",
+    "express": "^4.21.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

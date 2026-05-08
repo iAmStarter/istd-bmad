@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iStdBMAD — MCP Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --warn: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --red: #ef4444;
+    --green: #22c55e;
+  }
+  body { font-family: 'SF Mono', 'Fira Code', monospace; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 { font-size: 18px; color: var(--accent); letter-spacing: 1px; }
+  header .subtitle { font-size: 12px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-left: auto; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .conn-count { font-size: 13px; color: var(--green); margin-left: 6px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    height: calc(100vh - 57px);
+  }
+
+  .panel {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-title {
+    padding: 12px 16px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .panel-body { overflow-y: auto; flex: 1; padding: 12px; }
+
+  /* Stats bar */
+  .stats {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    flex: 1;
+    padding: 12px 20px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .stat:last-child { border-right: none; }
+  .stat-value { font-size: 22px; color: var(--accent); font-weight: bold; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Session cards */
+  .session-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: border-color .2s;
+  }
+  .session-card:hover { border-color: var(--accent); }
+  .session-project { font-size: 13px; color: var(--accent2); font-weight: 600; }
+  .session-root { font-size: 10px; color: var(--muted); margin-top: 3px; word-break: break-all; }
+  .session-id { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .empty-state { color: var(--muted); font-size: 12px; text-align: center; padding: 24px 0; }
+
+  /* Activity feed */
+  .activity-feed { padding: 0; }
+  .activity-row {
+    display: grid;
+    grid-template-columns: 80px 120px 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    animation: fadeIn .3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:none } }
+  .activity-row:hover { background: var(--surface); }
+  .activity-time { color: var(--muted); font-size: 11px; }
+  .activity-project { color: var(--accent2); }
+  .activity-skill { color: var(--text); }
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .badge-tool { background: #1e3a5f; color: #60a5fa; }
+  .badge-connect { background: #14532d; color: var(--green); }
+  .badge-disconnect { background: #450a0a; color: var(--red); }
+  .badge-doc { background: #2d1b69; color: #a78bfa; }
+  .badge-root { background: #422006; color: var(--warn); }
+
+  /* Skills panel */
+  .skills-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .skill-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .status-offline { color: var(--red); }
+  .uptime { font-size: 12px; color: var(--muted); margin-left: auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>iStdBMAD</h1>
+    <div class="subtitle">BMAD MCP Server · Local Network Dashboard</div>
+  </div>
+  <div class="dot" id="dot"></div>
+  <span class="conn-count" id="connCount">0 connected</span>
+  <span class="uptime" id="uptime">uptime: —</span>
+</header>
+
+<div class="grid">
+
+  <!-- Stats bar -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="statSessions">0</div>
+      <div class="stat-label">Active Sessions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statSkills">—</div>
+      <div class="stat-label">BMAD Skills</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statCalls">0</div>
+      <div class="stat-label">Skill Calls (session)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statDocs">0</div>
+      <div class="stat-label">Docs Written</div>
+    </div>
+  </div>
+
+  <!-- Left: Sessions + Skills -->
+  <div style="display:flex;flex-direction:column;border-right:1px solid var(--border);">
+
+    <div class="panel" style="flex:0 0 auto; max-height:50%; border-right:none;">
+      <div class="panel-title">Active Sessions</div>
+      <div class="panel-body" id="sessions">
+        <div class="empty-state">No clients connected</div>
+      </div>
+    </div>
+
+    <div class="panel" style="flex:1; border-right:none; border-top:1px solid var(--border);">
+      <div class="panel-title">BMAD Skills Available</div>
+      <div class="panel-body">
+        <div class="skills-grid" id="skillsGrid"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: Activity feed -->
+  <div class="panel" style="border-right:none;">
+    <div class="panel-title">Live Activity Feed</div>
+    <div class="panel-body activity-feed" id="activityFeed">
+      <div class="empty-state" style="padding:40px 0">Waiting for activity...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let sessionCallCount = 0;
+  let docWriteCount = 0;
+  let firstLoad = true;
+
+  function formatTime(iso) {
+    return new Date(iso).toLocaleTimeString('en-GB', { hour12: false });
+  }
+
+  function formatUptime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  }
+
+  function badgeFor(type) {
+    if (type === 'tool_call') return '<span class="badge badge-tool">SKILL</span>';
+    if (type === 'connected') return '<span class="badge badge-connect">CONNECT</span>';
+    if (type === 'disconnected') return '<span class="badge badge-disconnect">DISCONNECT</span>';
+    if (type === 'doc_written') return '<span class="badge badge-doc">DOC WRITE</span>';
+    if (type === 'rules_updated') return '<span class="badge badge-doc">RULES</span>';
+    if (type === 'root_changed') return '<span class="badge badge-root">ROOT CHANGE</span>';
+    return `<span class="badge badge-tool">${type.toUpperCase()}</span>`;
+  }
+
+  function skillLabel(entry) {
+    if (entry.skill) return entry.skill;
+    if (entry.file) return entry.file;
+    if (entry.root) return entry.root.split('/').pop();
+    return entry.message ?? '';
+  }
+
+  function renderActivity(entry, prepend = true) {
+    const feed = document.getElementById('activityFeed');
+    const empty = feed.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    const row = document.createElement('div');
+    row.className = 'activity-row';
+    row.innerHTML = `
+      <span class="activity-time">${formatTime(entry.time)}</span>
+      <span class="activity-project">${entry.project ?? ''}</span>
+      <span class="activity-skill">${badgeFor(entry.type)} ${skillLabel(entry)}</span>
+    `;
+
+    if (prepend) {
+      feed.insertBefore(row, feed.firstChild);
+      if (feed.children.length > 100) feed.removeChild(feed.lastChild);
+    } else {
+      feed.appendChild(row);
+    }
+
+    if (entry.type === 'tool_call') sessionCallCount++;
+    if (entry.type === 'doc_written') docWriteCount++;
+    document.getElementById('statCalls').textContent = sessionCallCount;
+    document.getElementById('statDocs').textContent = docWriteCount;
+  }
+
+  function renderSessions(sessions) {
+    const el = document.getElementById('sessions');
+    el.innerHTML = '';
+    if (!sessions.length) {
+      el.innerHTML = '<div class="empty-state">No clients connected</div>';
+      return;
+    }
+    for (const s of sessions) {
+      el.innerHTML += `
+        <div class="session-card">
+          <div class="session-project">📁 ${s.project}</div>
+          <div class="session-root">${s.root ?? '(root unknown)'}</div>
+          <div class="session-id">ID: ${s.sessionId.slice(0, 12)}...</div>
+        </div>
+      `;
+    }
+  }
+
+  async function fetchStatus() {
+    try {
+      const r = await fetch('/api/status');
+      const data = await r.json();
+
+      document.getElementById('statSessions').textContent = data.sessions.length;
+      document.getElementById('statSkills').textContent = data.skillCount;
+      document.getElementById('connCount').textContent = `${data.sessions.length} connected`;
+      document.getElementById('uptime').textContent = `uptime: ${formatUptime(data.uptime)}`;
+      document.getElementById('dot').style.background = 'var(--green)';
+
+      renderSessions(data.sessions);
+
+      if (firstLoad) {
+        firstLoad = false;
+        // Render historical activity
+        const feed = document.getElementById('activityFeed');
+        feed.innerHTML = '';
+        for (const entry of [...data.recentActivity].reverse()) {
+          renderActivity(entry, false);
+        }
+        // Render skills
+        const grid = document.getElementById('skillsGrid');
+        grid.innerHTML = data.skills.map(s => `<div class="skill-chip">${s}</div>`).join('');
+      }
+    } catch {
+      document.getElementById('dot').style.background = 'var(--red)';
+      document.getElementById('dot').style.animation = 'none';
+    }
+  }
+
+  // Live events via SSE
+  const es = new EventSource('/ui-events');
+  es.onmessage = (e) => {
+    const entry = JSON.parse(e.data);
+    if (entry.type === 'init') return;
+    renderActivity(entry);
+    fetchStatus();
+  };
+  es.onerror = () => {
+    document.getElementById('dot').style.background = 'var(--red)';
+  };
+
+  // Initial load + polling
+  fetchStatus();
+  setInterval(fetchStatus, 10000);
+</script>
+
+</body>
+</html>
