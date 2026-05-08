@@ -402,15 +402,22 @@ app.get('/sse', async (req, res) => {
 
   await server.connect(transport);
 
-  // Attempt root discovery right after connect
-  const root = await resolveRoot(server);
-  if (root) {
-    sessionMeta.projectRoot = root;
-    sessionMeta.projectName = root.split('/').pop();
-  }
-
   sessions.set(transport.sessionId, { server, transport, meta: sessionMeta });
-  logActivity({ type: 'connected', project: sessionMeta.projectName ?? '(unknown)', sessionId: transport.sessionId });
+  logActivity({ type: 'connected', project: '(unknown)', sessionId: transport.sessionId });
+
+  // Client sends roots asynchronously after the handshake — retry a few times
+  (async () => {
+    for (const ms of [300, 800, 2000]) {
+      await new Promise((r) => setTimeout(r, ms));
+      const root = await resolveRoot(server);
+      if (root) {
+        sessionMeta.projectRoot = root;
+        sessionMeta.projectName = root.split('/').pop();
+        logActivity({ type: 'root_changed', project: sessionMeta.projectName, root });
+        break;
+      }
+    }
+  })();
 
   res.on('close', () => {
     logActivity({ type: 'disconnected', project: sessionMeta.projectName ?? '(unknown)', sessionId: transport.sessionId });
