@@ -17,7 +17,9 @@ import { networkInterfaces } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { SKILLS_DIR } from './paths.js';
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
+const PORT_FROM_ENV = !!process.env.PORT;
+const MAX_PORT_RETRIES = 10;
 const HOST = process.env.HOST || '0.0.0.0';
 const START_TIME = Date.now();
 
@@ -460,25 +462,56 @@ app.get('/health', (req, res) => {
 
 const localIp = getLocalIp();
 
-app.listen(PORT, HOST, () => {
-  console.log(`
-╔══════════════════════════════════════════════════════════════╗
-║                 iStdBMAD — MCP Server                        ║
-╠══════════════════════════════════════════════════════════════╣
-║  Web Dashboard:                                              ║
-║    Local  :  http://localhost:${PORT}/                         ║
-║    Network:  http://${localIp}:${PORT}/                ║
-║                                                              ║
-║  MCP SSE endpoint:                                           ║
-║    Local  :  http://localhost:${PORT}/sse                      ║
-║    Network:  http://${localIp}:${PORT}/sse             ║
-╠══════════════════════════════════════════════════════════════╣
-║  Add to ~/.claude/settings.json :                            ║
-╚══════════════════════════════════════════════════════════════╝
+function tryListen(port, attempt = 0) {
+  const server = app.listen(port, HOST);
 
-${JSON.stringify({ mcpServers: { iStdBMAD: { type: 'sse', url: `http://${localIp}:${PORT}/sse` } } }, null, 2)}
-`);
-});
+  server.on('listening', () => {
+    if (attempt > 0) {
+      console.log(`⚠️  Port ${PORT} was in use — using ${port} instead\n`);
+    }
+
+    const W = 62; // inner width between the box borders
+    const row = (text) => `║${text}${' '.repeat(Math.max(0, W - text.length))}║`;
+
+    console.log([
+      `╔${'═'.repeat(W)}╗`,
+      row(`                 iStdBMAD — MCP Server`),
+      `╠${'═'.repeat(W)}╣`,
+      row(`  Web Dashboard:`),
+      row(`    Local  :  http://localhost:${port}/`),
+      row(`    Network:  http://${localIp}:${port}/`),
+      row(``),
+      row(`  MCP SSE endpoint:`),
+      row(`    Local  :  http://localhost:${port}/sse`),
+      row(`    Network:  http://${localIp}:${port}/sse`),
+      `╠${'═'.repeat(W)}╣`,
+      row(`  Add to ~/.claude/settings.json :`),
+      `╚${'═'.repeat(W)}╝`,
+      ``,
+      JSON.stringify({ mcpServers: { iStdBMAD: { type: 'sse', url: `http://${localIp}:${port}/sse` } } }, null, 2),
+      ``,
+    ].join('\n'));
+  });
+
+  server.on('error', (err) => {
+    if (err.code !== 'EADDRINUSE') throw err;
+
+    if (PORT_FROM_ENV) {
+      console.error(`\n❌  Port ${port} is already in use.`);
+      console.error(`   You set PORT=${port} explicitly. Pick a different port or stop the other process.\n`);
+      process.exit(1);
+    }
+
+    if (attempt >= MAX_PORT_RETRIES) {
+      console.error(`\n❌  Could not find a free port between ${PORT} and ${PORT + MAX_PORT_RETRIES}.\n`);
+      process.exit(1);
+    }
+
+    tryListen(port + 1, attempt + 1);
+  });
+}
+
+tryListen(PORT);
 
 function getLocalIp() {
   const nets = networkInterfaces();

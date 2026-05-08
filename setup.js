@@ -89,4 +89,5 @@ await execa(
 
 console.log(`\n${c.green}${c.bold}✅ Setup complete.${c.reset}`);
 console.log(`  Skills installed at: ${c.dim}${dir}${c.reset}`);
-console.log(`  Run: ${c.dim}istd-bmad start${c.reset}\n`);
+console.log(`  Run: ${c.dim}npx istd-bmad start${c.reset}`);
+console.log(`  ${c.dim}(or install globally: npm install -g istd-bmad → istd-bmad start)${c.reset}\n`);
