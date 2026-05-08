@@ -98,11 +98,11 @@ You should see `iStdBMAD` in the list.
 
 Every project needs a `.mcp.json` so Claude Code knows to use iStdBMAD, plus a `docs/` folder for your project-specific documents.
 
-### Option A — Use `istd-init` (recommended)
+### Option A — Use `istd-bmad init` (recommended)
 
 ```bash
 cd my-project
-npx istd-init --yes --no-bmad
+npx istd-bmad init --yes
 ```
 
 This creates everything automatically:

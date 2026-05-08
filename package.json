@@ -16,6 +16,7 @@
     "bin/",
     "server.js",
     "setup.js",
+    "init.js",
     "public/",
     "assets/",
     "README.md",
