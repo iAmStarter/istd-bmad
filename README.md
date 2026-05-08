@@ -2,6 +2,8 @@
 
 BMAD-METHOD MCP server for local network — serves all 42 BMAD AI development skills to every project on your machine (or team network) from a single installation.
 
+Works with **Claude Code, Cursor, Windsurf, GitHub Copilot, Cline, Codex, Gemini CLI, and more.**
+
 ---
 
 ## Support this project
@@ -18,18 +20,18 @@ If iStdBMAD saves you time, consider buying me a coffee ☕
 
 ## What it does
 
-- Runs a **local MCP server** that Claude Code connects to
+- Runs a **local MCP server** that connects to Claude Code, Cursor, Windsurf, GitHub Copilot, and more
 - Serves all **BMAD-METHOD skills** (create PRD, architecture, stories, dev story, code review, etc.)
 - **Reads your project's `docs/`** and `CLAUDE.md` automatically — every skill gets your project context injected
 - Shows a **live web dashboard** to see connected sessions and skill activity
-- Works across your **whole local network** — one server, every developer
+- Works across your **whole local network** — one server, every developer and every tool
 
 ---
 
 ## Prerequisites
 
 - Node.js 20+
-- [Claude Code](https://claude.ai/code) installed
+- At least one supported AI tool (Claude Code, Cursor, Windsurf, GitHub Copilot, Cline, Codex, Gemini CLI, etc.)
 - Git
 
 ---
