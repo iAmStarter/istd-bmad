@@ -45,7 +45,17 @@ npm run setup      # installs BMAD skills (takes ~30s)
 
 ### What `npm run setup` does
 
-Downloads and installs all 42 BMAD-METHOD skills into `.claude/skills/`. Only needed once. Re-run with `npm run setup -- --force` to upgrade to the latest BMAD version.
+Downloads and installs all 42 BMAD-METHOD skills into the appropriate directories for each tool. Only needed once. Re-run with `npm run setup -- --force` to upgrade to the latest BMAD version.
+
+By default, setup prompts you to choose which tools to install skills for. Pass `--tools` to skip the prompt:
+
+```bash
+npm run setup -- --tools claude-code,cursor
+# or with --yes for recommended defaults (Claude Code, Cursor, GitHub Copilot, Codex)
+npm run setup -- --yes
+```
+
+**Supported tools:** `claude-code`, `cursor`, `windsurf`, `github-copilot`, `cline`, `roo`, `codex`, `gemini`, `replit`
 
 ---
 
@@ -74,7 +84,9 @@ Keep this terminal open while you work. The server must be running for Claude Co
 
 ---
 
-## Connect Claude Code (one-time per machine)
+## Connect your AI tool (one-time per machine)
+
+### Claude Code
 
 Register the server globally so it's available in every Claude Code session:
 
@@ -88,9 +100,19 @@ claude mcp add --transport sse --scope user iStdBMAD http://localhost:3000/sse
 claude mcp list
 ```
 
-You should see `iStdBMAD` in the list.
+You should see `iStdBMAD` in the list. Restart Claude Code after registering.
 
-> **Restart Claude Code** after registering to activate the connection.
+### Cursor / Windsurf / GitHub Copilot
+
+These tools discover MCP servers via the config file in the project directory (created by `istd-bmad init`). No global registration needed — open the project and the connection is automatic.
+
+### Cline / Roo Code
+
+Open VS Code → sidebar → MCP Servers → Add → SSE → `http://localhost:3000/sse`
+
+### Codex / Gemini CLI / Replit
+
+BMAD skills are installed as local files (`.agents/skills/`). No server connection needed — the tool reads them directly from your project.
 
 ---
 
@@ -105,35 +127,82 @@ cd my-project
 npx istd-bmad init --yes
 ```
 
-This creates everything automatically:
+By default, init prompts you to choose which AI tools to configure. Pass `--tools` to skip the prompt:
+
+```bash
+npx istd-bmad init --yes --tools claude-code,cursor
+npx istd-bmad init --yes --tools cursor,windsurf,github-copilot
+```
+
+This creates the appropriate MCP config file(s) for each selected tool:
+
+| Tool | Config file created |
+|------|---------------------|
+| Claude Code | `.mcp.json` |
+| Cursor | `.cursor/mcp.json` |
+| Windsurf | `.windsurf/mcp.json` |
+| GitHub Copilot (VS Code) | `.vscode/mcp.json` |
+| Cline / Roo / Codex / Gemini | (printed as manual instructions) |
+
+Plus the full project scaffold:
 
 ```
 my-project/
-├── .mcp.json              ← points Claude Code to iStdBMAD
+├── .mcp.json              ← Claude Code config (if selected)
+├── .cursor/mcp.json       ← Cursor config (if selected)
 ├── CLAUDE.md              ← project rules (fill in before starting)
 ├── docs/
 │   ├── project-brief.md   ← describe your project here first
 │   ├── prd.md
 │   ├── architecture.md
 │   └── stories/
-├── .gitignore
-└── README.md
+└── .gitignore
 ```
 
 ### Option B — Manual (existing projects)
 
-Create `.mcp.json` in the project root:
+Create the MCP config file for your tool:
 
+**Claude Code** — `.mcp.json`:
 ```json
 {
   "mcpServers": {
-    "iStdBMAD": {
-      "type": "sse",
-      "url": "http://localhost:3000/sse"
-    }
+    "iStdBMAD": { "type": "sse", "url": "http://localhost:3000/sse" }
   }
 }
 ```
+
+**Cursor** — `.cursor/mcp.json`:
+```json
+{
+  "mcpServers": {
+    "iStdBMAD": { "url": "http://localhost:3000/sse" }
+  }
+}
+```
+
+**Windsurf** — `.windsurf/mcp.json`:
+```json
+{
+  "mcpServers": {
+    "iStdBMAD": { "serverUrl": "http://localhost:3000/sse" }
+  }
+}
+```
+
+**GitHub Copilot (VS Code)** — `.vscode/mcp.json`:
+```json
+{
+  "inputs": [],
+  "servers": {
+    "iStdBMAD": { "type": "sse", "url": "http://localhost:3000/sse" }
+  }
+}
+```
+
+**Cline / Roo Code**: Open VS Code → sidebar → MCP Servers → Add → SSE → `http://localhost:3000/sse`
+
+**Codex / Gemini CLI / Replit**: BMAD skills are installed directly (no MCP config needed — skills live in `.agents/skills/`).
 
 Create `docs/` folder and `CLAUDE.md` manually (see templates below).
 
