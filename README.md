@@ -9,7 +9,7 @@ BMAD-METHOD MCP server for local network — serves all 42 BMAD AI development s
 If iStdBMAD saves you time, consider buying me a coffee ☕
 
 <p align="center">
-  <img src="assets/donate.webp" alt="Donate via PayPal — Theerasak Duangkaew" width="220" />
+  <img src="https://raw.githubusercontent.com/iAmStarter/istd-bmad/main/assets/donate.webp" alt="Donate via PayPal — Theerasak Duangkaew" width="220" />
   <br/>
   <sub>Scan to pay · Theerasak Duangkaew</sub>
 </p>
