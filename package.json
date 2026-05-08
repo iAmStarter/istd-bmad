@@ -1,6 +1,6 @@
 {
   "name": "istd-bmad",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "BMAD-METHOD MCP server for local network — project-aware AI development skills with web dashboard",
   "type": "module",
   "main": "server.js",
@@ -18,6 +18,7 @@
     "setup.js",
     "init.js",
     "tools.js",
+    "paths.js",
     "public/",
     "assets/",
     "README.md",

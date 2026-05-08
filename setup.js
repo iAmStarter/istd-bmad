@@ -1,16 +1,19 @@
 #!/usr/bin/env node
-// One-time setup: installs BMAD skills into this server directory
+// One-time setup: installs BMAD skills into the iStdBMAD home directory
+// (default: ~/.istd-bmad/, override with ISTD_BMAD_HOME).
 import { execa } from 'execa';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 import { TOOLS, TOOL_IDS } from './tools.js';
+import { INSTALL_DIR, SKILLS_DIR } from './paths.js';
 
-const dir = process.cwd();
-const skillsDir = join(dir, '.claude', 'skills');
+const dir = INSTALL_DIR;
+const skillsDir = SKILLS_DIR;
 const args = process.argv.slice(2);
 const force = args.includes('--force');
 const yes = args.includes('--yes') || args.includes('-y');
+
+if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
 const c = {
   reset: '\x1b[0m',
@@ -76,7 +79,7 @@ if (toolsFlag) {
   console.log(`\n  Installing for: ${c.green}${selectedIds.map((id) => TOOLS.find((t) => t.id === id).name).join(', ')}${c.reset}\n`);
 }
 
-console.log('Installing BMAD-METHOD skills...\n');
+console.log(`Installing BMAD-METHOD skills to ${c.cyan}${dir}${c.reset}...\n`);
 
 await execa(
   'npx',
@@ -84,4 +87,6 @@ await execa(
   { stdio: 'inherit' }
 );
 
-console.log(`\n${c.green}${c.bold}✅ Setup complete.${c.reset} Run: ${c.dim}istd-bmad start${c.reset}`);
+console.log(`\n${c.green}${c.bold}✅ Setup complete.${c.reset}`);
+console.log(`  Skills installed at: ${c.dim}${dir}${c.reset}`);
+console.log(`  Run: ${c.dim}istd-bmad start${c.reset}\n`);

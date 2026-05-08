@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 import { existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { SKILLS_DIR } from '../paths.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = join(__dirname, '..');
-const skillsDir = join(root, '.claude', 'skills');
+const skillsDir = SKILLS_DIR;
 const args = process.argv.slice(2);
 const cmd = args[0];
 

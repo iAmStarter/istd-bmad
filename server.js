@@ -15,10 +15,10 @@ import { existsSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { networkInterfaces } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { SKILLS_DIR } from './paths.js';
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
-const SKILLS_DIR = join(process.cwd(), '.claude', 'skills');
 const START_TIME = Date.now();
 
 // ── Load BMAD skill files ────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ const START_TIME = Date.now();
 async function loadSkills() {
   if (!existsSync(SKILLS_DIR)) {
     console.error(`\n❌ Skills directory not found: ${SKILLS_DIR}`);
-    console.error('   Run: npm run setup\n');
+    console.error('   Run: istd-bmad setup\n');
     process.exit(1);
   }
 
@@ -35,7 +35,7 @@ async function loadSkills() {
   const skillDirs = entries.filter((e) => e.isDirectory());
 
   if (skillDirs.length === 0) {
-    console.error('\n❌ No skill directories found. Run: npm run setup\n');
+    console.error('\n❌ No skill directories found. Run: istd-bmad setup\n');
     process.exit(1);
   }
 

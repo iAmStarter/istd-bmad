@@ -38,33 +38,50 @@ If iStdBMAD saves you time, consider buying me a coffee ☕
 
 ## Installation
 
+The fastest path uses `npx` — no clone, no `npm install`. Skills install into a stable home directory (`~/.istd-bmad/`) so the server can find them on every run.
+
 ```bash
-git clone <repo-url> iStdBMAD
-cd iStdBMAD
-npm install
-npm run setup      # installs BMAD skills (takes ~30s)
+npx istd-bmad setup       # interactive: pick which tools to install for
+npx istd-bmad start       # start the MCP server
 ```
 
-### What `npm run setup` does
-
-Downloads and installs all 42 BMAD-METHOD skills into the appropriate directories for each tool. Only needed once. Re-run with `npm run setup -- --force` to upgrade to the latest BMAD version.
-
-By default, setup prompts you to choose which tools to install skills for. Pass `--tools` to skip the prompt:
+Or install globally so the `istd-bmad` command is always available:
 
 ```bash
-npm run setup -- --tools claude-code,cursor
-# or with --yes for recommended defaults (Claude Code, Cursor, GitHub Copilot, Codex)
-npm run setup -- --yes
+npm install -g istd-bmad
+istd-bmad setup
+istd-bmad start
+```
+
+### Setup options
+
+```bash
+npx istd-bmad setup --yes                          # recommended defaults
+npx istd-bmad setup --tools claude-code,cursor     # explicit tool list
+npx istd-bmad setup --force                        # reinstall / upgrade BMAD
 ```
 
 **Supported tools:** `claude-code`, `cursor`, `windsurf`, `github-copilot`, `cline`, `roo`, `codex`, `gemini`, `replit`
+
+### Where skills are installed
+
+Default: `~/.istd-bmad/` (and `~/.istd-bmad/.claude/skills/` for the BMAD skill files).
+
+Override with the `ISTD_BMAD_HOME` env var:
+
+```bash
+ISTD_BMAD_HOME=/opt/istd-bmad npx istd-bmad setup
+ISTD_BMAD_HOME=/opt/istd-bmad npx istd-bmad start
+```
 
 ---
 
 ## Starting the server
 
 ```bash
-npm start
+npx istd-bmad start
+# or, if installed globally:
+istd-bmad start
 ```
 
 You will see:
@@ -437,7 +454,7 @@ To share one server across multiple developers on the same network:
 
 **On the server machine** (run once):
 ```bash
-npm start
+npx istd-bmad start
 # Note the Network URL: http://192.168.x.x:3000/sse
 ```
 
@@ -465,8 +482,8 @@ claude mcp add --transport sse --scope user iStdBMAD http://192.168.x.x:3000/sse
 To get the latest BMAD-METHOD skills:
 
 ```bash
-npm run setup -- --force
-npm start
+npx istd-bmad setup --force
+npx istd-bmad start
 ```
 
 All connected developers get the updated skills immediately — no action needed on their end.
@@ -476,12 +493,12 @@ All connected developers get the updated skills immediately — no action needed
 ## Troubleshooting
 
 **Claude Code doesn't see iStdBMAD tools**
-- Make sure the server is running (`npm start`)
+- Make sure the server is running (`npx istd-bmad start`)
 - Restart Claude Code after registering with `claude mcp add`
 - Check `claude mcp list` — `iStdBMAD` should be listed
 
 **"No project root detected" in skill responses**
-- Your project needs `.mcp.json` — run `npx istd-init --yes --no-bmad` or create it manually
+- Your project needs `.mcp.json` — run `npx istd-bmad init --yes` or create it manually
 - Restart Claude Code after adding `.mcp.json`
 
 **Skills loaded but no project context injected**
@@ -489,20 +506,33 @@ All connected developers get the updated skills immediately — no action needed
 - The server reads `docs/` from whichever project Claude Code has open
 
 **Server won't start — "Skills directory not found"**
-- Run `npm run setup` first to install BMAD skills
+- Run `npx istd-bmad setup` first to install BMAD skills
+- Or check `~/.istd-bmad/.claude/skills/` exists (or `$ISTD_BMAD_HOME/.claude/skills/` if you set the override)
 
 ---
 
 ## Project Structure
 
+The npm package itself:
+
 ```
-iStdBMAD/
+istd-bmad/
+├── bin/cli.js         ← CLI entry point (setup / init / start)
 ├── server.js          ← MCP server (SSE transport + web dashboard)
 ├── setup.js           ← One-time BMAD skill installer
+├── init.js            ← Per-project scaffolder
+├── tools.js           ← Supported tools registry
+├── paths.js           ← Resolves install location
 ├── public/
 │   └── index.html     ← Web dashboard UI
-├── .claude/
-│   └── skills/        ← BMAD skill files (42 skills, installed by setup)
-├── _bmad/             ← BMAD core configuration
 └── package.json
+```
+
+After running `npx istd-bmad setup`, BMAD skills live in your home directory (so any `npx istd-bmad start` invocation can find them):
+
+```
+~/.istd-bmad/                 ← override with $ISTD_BMAD_HOME
+├── .claude/
+│   └── skills/               ← 42 BMAD skill files
+└── _bmad/                    ← BMAD core configuration
 ```
